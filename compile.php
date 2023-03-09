@@ -25,12 +25,12 @@ try {
     $phar->startBuffering();
 
     // Create the default stub from main.php entrypoint
-    $defaultStub = $phar->createDefaultStub('run');
+    $defaultStub = $phar->createDefaultStub('run.php');
 
     // Add the rest of the apps files
-    $phar->addFile(__DIR__ . '/run', 'run');
+    $phar->addFile(__DIR__ . '/run.php', 'run.php');
+    $phar->buildFromDirectory(__DIR__, '/src(.*)/');
     $phar->buildFromDirectory(__DIR__, '/vendor(.*)/');
-    $phar->buildFromDirectory(__DIR__, '/Commands(.*)/');
 
     // Customize the stub to add the shebang
     $stub = "#!/usr/bin/env php \n" . $defaultStub;
