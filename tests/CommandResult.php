@@ -13,6 +13,11 @@ class CommandResult
         protected ?\Exception $error
     ) { }
 
+    public function getStderr(): string
+    {
+        return $this->error?->getMessage() ?? '';
+    }
+
     public function assertSuccessfulExit(): void
     {
         Assert::assertEquals(0, $this->tester->getStatusCode());
@@ -30,7 +35,7 @@ class CommandResult
 
     public function assertStderrContains(string $needle): void
     {
-        Assert::assertStringContainsString($needle, $this->error->getMessage() ?? '');
+        Assert::assertStringContainsString($needle, $this->getStderr());
     }
 
 

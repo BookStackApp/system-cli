@@ -53,6 +53,8 @@ class UpdateCommand extends Command
         $artisan->run(['config:clear']);
         $artisan->run(['view:clear']);
 
+        $output->writeln("<info>Your BookStack instance at [{$appDir}] has been updated!</info>");
+
         return Command::SUCCESS;
     }
 
