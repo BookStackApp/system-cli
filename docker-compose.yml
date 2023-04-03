@@ -3,6 +3,7 @@ version: "3.8"
 services:
   app:
     build: .
+    working_dir: /cli
     volumes:
       - ./:/cli
     depends_on:

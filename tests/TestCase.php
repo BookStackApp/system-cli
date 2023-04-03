@@ -40,14 +40,20 @@ class TestCase extends \PHPUnit\Framework\TestCase
         return require dirname(__DIR__) . '/src/app.php';
     }
 
-    protected function runCommand(string $command, array $args = []): CommandTester
+    protected function runCommand(string $command, array $args = []): CommandResult
     {
         $app = $this->getApp();
         $command = $app->find($command);
 
+        $err = null;
         $commandTester = new CommandTester($command);
-        $commandTester->execute($args);
 
-        return $commandTester;
+        try {
+            $commandTester->execute($args);
+        } catch (\Exception $exception) {
+            $err = $exception;
+        }
+
+        return new CommandResult($commandTester, $err);
     }
 }

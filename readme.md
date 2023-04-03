@@ -25,14 +25,19 @@ This can be done by running the compile file:
 php compile.php
 ```
 
+Tests can be ran via PHPUnit within the docker environment as described below. **It is not advised** to run tests outside of this docker environment since tests are written to an expected pre-configured system environment.
+
 #### Docker Environment
 
 A docker-compose setup exists to create a clean, contained environment, which is important for this project since the
 CLI checks and interacts with many system-level elements.
 
 ```bash
+# Build the environment container
+docker compose build
+
 # Enter the environment
-docker compose run -w /cli app
+docker compose run app
 
 # From there you'll be dropped into a bash shell within the project directory.
 # You could proceed to install dependencies via composer via:
@@ -40,7 +45,12 @@ composer install
 
 # Then you can run tests via:
 vendor/bin/phpunit
+
+# To clean-up and delete the environment:
+docker compose rm -fsv
 ```
+
+Within the environment a pre-existing BookStack instance can be found at `/var/www/bookstack` for testing.
 
 ### Contributing
 
