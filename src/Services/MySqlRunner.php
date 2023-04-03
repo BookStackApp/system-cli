@@ -86,7 +86,9 @@ class MySqlRunner
                     fwrite($file, $data);
                     $hasOutput = true;
                 }, function ($error) use (&$errors) {
-                    $errors .= $error . "\n";
+                    if (!str_contains($error, '[Warning] ')) {
+                        $errors .= $error . "\n";
+                    }
                 });
         } catch (\Exception $exception) {
             fclose($file);

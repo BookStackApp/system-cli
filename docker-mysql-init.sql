@@ -1,0 +1,1 @@
+GRANT RELOAD ON *.* TO 'bookstack'@'%';

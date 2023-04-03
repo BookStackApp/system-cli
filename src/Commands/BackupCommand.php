@@ -49,9 +49,12 @@ final class BackupCommand extends Command
         $zip = new ZipArchive();
         $zip->open($zipTempFile, ZipArchive::CREATE);
 
-        // Add default files (.env config file and this CLI)
+        // Add default files (.env config file and this CLI if existing)
         $zip->addFile($appDir . DIRECTORY_SEPARATOR . '.env', '.env');
-        $zip->addFile($appDir . DIRECTORY_SEPARATOR . 'scripts' . DIRECTORY_SEPARATOR . 'run', 'run');
+        $cliPath = $appDir . DIRECTORY_SEPARATOR . 'bookstack-system-cli';
+        if (file_exists($cliPath)) {
+            $zip->addFile($cliPath, 'bookstack-system-cli');
+        }
 
         if ($handleDatabase) {
             $output->writeln("<info>Dumping the database via mysqldump...</info>");

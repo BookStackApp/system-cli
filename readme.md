@@ -56,3 +56,14 @@ Within the environment a pre-existing BookStack instance can be found at `/var/w
 
 I welcome issues and PRs but keep in mind that I'd like to keep the feature-set narrow to limit support/maintenance burden.
 Therefore, I likely won't leave issues open long, or merge PRs, for requests to add new features or for changes that increase the scope of what this script already supports.
+
+### Known Issues
+
+#### mysqldump - Couldn't execute 'FLUSH TABLES'
+
+mysqldump may produce the following:
+
+> mysqldump: Couldn't execute 'FLUSH TABLES': Access denied; you need (at least one of) the RELOAD or FLUSH_TABLES privilege(s) for this operation (1227)
+
+This was due to 8.0.32 mysqldump, changing the required permissions, and this should be largely [fixed as per 8.0.33](https://bugs.mysql.com/bug.php?id=109685).
+Temporary workaround is to provide the database user RELOAD permissions: `GRANT RELOAD ON *.* TO 'bookstack'@'%';`

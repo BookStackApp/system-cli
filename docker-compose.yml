@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 
 services:
   app:
@@ -7,7 +7,8 @@ services:
     volumes:
       - ./:/cli
     depends_on:
-      - db
+      db:
+        condition: service_completed_successfully
   db:
     image: mysql:8.0
     environment:
@@ -15,3 +16,5 @@ services:
       MYSQL_DATABASE: bookstack
       MYSQL_USER: bookstack
       MYSQL_PASSWORD: bookstack
+    volumes:
+      - ./docker-mysql-init.sql:/docker-entrypoint-initdb.d/init.sql

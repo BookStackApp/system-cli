@@ -20,7 +20,21 @@ class CommandResult
 
     public function assertSuccessfulExit(): void
     {
-        Assert::assertEquals(0, $this->tester->getStatusCode());
+        try {
+            $statusCode = $this->tester->getStatusCode();
+        } catch (\Exception $exception) {
+            $statusCode = 1;
+        }
+
+        Assert::assertEquals(0, $statusCode);
+    }
+
+    public function dumpError(): void
+    {
+        if ($this->error) {
+            echo $this->error->getMessage() . "\n" .
+                $this->error->getTraceAsString();
+        }
     }
 
     public function assertErrorExit(): void
