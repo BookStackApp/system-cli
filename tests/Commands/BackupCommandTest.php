@@ -16,10 +16,10 @@ class BackupCommandTest extends TestCase
         exec('php artisan migrate --force');
         exec('php artisan bookstack:create-admin --email="' . static::$uniqueUserEmail . '" --name="Bazza" --password="hunter200"');
     }
+
     public function test_command_does_full_backup_of_cwd_instance_by_default()
     {
         chdir('/var/www/bookstack');
-
         $this->assertCount(0, glob('bookstack-backup-*.zip'));
 
         file_put_contents('/var/www/bookstack/themes/test.txt', static::$uniqueUserEmail . '-themes');
@@ -27,7 +27,6 @@ class BackupCommandTest extends TestCase
         file_put_contents('/var/www/bookstack/storage/uploads/test.txt', static::$uniqueUserEmail . '-storage-uploads');
 
         $result = $this->runCommand('backup');
-        $result->dumpError();
         $result->assertSuccessfulExit();
         $result->assertStdoutContains("Backup finished.");
 
@@ -43,5 +42,80 @@ class BackupCommandTest extends TestCase
         $this->assertStringContainsString(static::$uniqueUserEmail . '-public-uploads', $zip->getFromName('public/uploads/test.txt'));
         $this->assertStringContainsString(static::$uniqueUserEmail . '-storage-uploads', $zip->getFromName('storage/uploads/test.txt'));
         $this->assertStringContainsString(static::$uniqueUserEmail . '-themes', $zip->getFromName('themes/test.txt'));
+
+        unlink($zipFile);
     }
+
+    public function test_no_options()
+    {
+        chdir('/var/www/bookstack');
+        $this->assertCount(0, glob('bookstack-backup-*.zip'));
+
+        $result = $this->runCommand('backup', [
+            '--no-database' => true,
+            '--no-uploads' => true,
+            '--no-themes' => true,
+        ]);
+        $result->assertSuccessfulExit();
+
+        $zipFile = glob('bookstack-backup-*.zip')[0];
+
+        $zip = new \ZipArchive();
+        $zip->open($zipFile);
+        $this->assertLessThan(3, $zip->numFiles);
+        $this->assertFalse($zip->getFromName('db.sql'));
+        $this->assertFalse($zip->getFromName('themes/.gitignore'));
+        $this->assertFalse($zip->getFromName('public/uploads/.gitignore'));
+        $this->assertFalse($zip->getFromName('storage/uploads/.gitignore'));
+
+        unlink($zipFile);
+    }
+
+    public function test_app_directory_option()
+    {
+        chdir('/var');
+        $this->assertCount(0, glob('bookstack-backup-*.zip'));
+
+        $result = $this->runCommand('backup', [
+            '--no-database' => true,
+            '--no-uploads' => true,
+            '--no-themes' => true,
+            '--app-directory' => '/var/www/bookstack'
+        ]);
+        $result->assertSuccessfulExit();
+
+        $zipFile = glob('bookstack-backup-*.zip')[0] ?? null;
+        $this->assertNotNull($zipFile);
+
+        unlink($zipFile);
+    }
+
+    public function test_backup_path_argument()
+    {
+        chdir('/var/www/bookstack');
+        $this->assertCount(0, glob('/home/bookstack-backup-*.zip'));
+        $this->assertFileDoesNotExist('/home/my-cool-backup.zip');
+
+        $result = $this->runCommand('backup', [
+            'backup-path' => '/home/my-cool-backup.zip',
+            '--no-database' => true,
+            '--no-uploads' => true,
+            '--no-themes' => true,
+        ]);
+        $result->assertSuccessfulExit();
+        $this->assertFileExists('/home/my-cool-backup.zip');
+        unlink('/home/my-cool-backup.zip');
+
+        $result = $this->runCommand('backup', [
+            'backup-path' => '/home/',
+            '--no-database' => true,
+            '--no-uploads' => true,
+            '--no-themes' => true,
+        ]);
+        $result->assertSuccessfulExit();
+        $this->assertCount(1, glob('/home/bookstack-backup-*.zip'));
+        $zipFile = glob('/home/bookstack-backup-*.zip')[0];
+        unlink($zipFile);
+    }
+
 }
