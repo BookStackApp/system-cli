@@ -30,6 +30,7 @@ class RestoreCommand extends Command
 
     /**
      * @throws CommandError
+     * @throws \Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -199,6 +200,13 @@ class RestoreCommand extends Command
         $dbDump = $extractDir . DIRECTORY_SEPARATOR . 'db.sql';
         $currentEnv = EnvironmentLoader::load($appDir);
         $mysql = MySqlRunner::fromEnvOptions($currentEnv);
+
+        // Drop existing tables
+        $dropSqlTempFile = tempnam(sys_get_temp_dir(), 'bs-cli-restore');
+        file_put_contents($dropSqlTempFile, $mysql->dropTablesSql());
+        $mysql->importSqlFile($dropSqlTempFile);
+
+
         $mysql->importSqlFile($dbDump);
     }
 }

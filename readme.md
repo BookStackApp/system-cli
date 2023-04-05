@@ -47,7 +47,7 @@ composer install
 vendor/bin/phpunit
 
 # To clean-up and delete the environment:
-docker compose rm -fsv
+docker compose down -v --remove-orphans
 ```
 
 Within the environment a pre-existing BookStack instance can be found at `/var/www/bookstack` for testing.

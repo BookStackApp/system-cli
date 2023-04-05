@@ -31,13 +31,13 @@ class MySqlRunner
     public function testConnection(): bool
     {
         $output = (new ProgramRunner('mysql', '/usr/bin/mysql'))
+            ->withEnvironment(['MYSQL_PWD' => $this->password])
             ->withTimeout(240)
             ->withIdleTimeout(5)
             ->runCapturingStdErr([
                 '-h', $this->host,
                 '-P', $this->port,
                 '-u', $this->user,
-                '-p' . $this->password,
                 $this->database,
                 '-e', "show tables;"
             ]);
@@ -48,20 +48,39 @@ class MySqlRunner
     public function importSqlFile(string $sqlFilePath): void
     {
         $output = (new ProgramRunner('mysql', '/usr/bin/mysql'))
+            ->withEnvironment(['MYSQL_PWD' => $this->password])
             ->withTimeout(240)
             ->withIdleTimeout(5)
             ->runCapturingStdErr([
                 '-h', $this->host,
                 '-P', $this->port,
                 '-u', $this->user,
-                '-p' . $this->password,
                 $this->database,
-                '<', $sqlFilePath
+                '-e', "source {$sqlFilePath}"
             ]);
 
         if ($output) {
             throw new Exception("Failed mysql file import with errors:\n" . $output);
         }
+    }
+
+    public function dropTablesSql(): string
+    {
+        return <<<'HEREDOC'
+SET FOREIGN_KEY_CHECKS = 0;
+SET GROUP_CONCAT_MAX_LEN=32768;
+SET @tables = NULL;
+SELECT GROUP_CONCAT('`', table_name, '`') INTO @tables
+  FROM information_schema.tables
+  WHERE table_schema = (SELECT DATABASE());
+SELECT IFNULL(@tables,'dummy') INTO @tables;
+
+SET @tables = CONCAT('DROP TABLE IF EXISTS ', @tables);
+PREPARE stmt FROM @tables;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET FOREIGN_KEY_CHECKS = 1;
+HEREDOC;
     }
 
     public function runDumpToFile(string $filePath): void
@@ -74,11 +93,11 @@ class MySqlRunner
             (new ProgramRunner('mysqldump', '/usr/bin/mysqldump'))
                 ->withTimeout(240)
                 ->withIdleTimeout(15)
+                ->withEnvironment(['MYSQL_PWD' => $this->password])
                 ->runWithoutOutputCallbacks([
                     '-h', $this->host,
                     '-P', $this->port,
                     '-u', $this->user,
-                    '-p' . $this->password,
                     '--single-transaction',
                     '--no-tablespaces',
                     $this->database,
@@ -86,9 +105,7 @@ class MySqlRunner
                     fwrite($file, $data);
                     $hasOutput = true;
                 }, function ($error) use (&$errors) {
-                    if (!str_contains($error, '[Warning] ')) {
-                        $errors .= $error . "\n";
-                    }
+                    $errors .= $error . "\n";
                 });
         } catch (\Exception $exception) {
             fclose($file);
