@@ -10,6 +10,7 @@ use Cli\Services\InteractiveConsole;
 use Cli\Services\MySqlRunner;
 use Cli\Services\ProgramRunner;
 use Cli\Services\RequirementsValidator;
+use Exception;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Symfony\Component\Console\Command\Command;
@@ -30,7 +31,7 @@ class RestoreCommand extends Command
 
     /**
      * @throws CommandError
-     * @throws \Exception
+     * @throws Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -61,7 +62,7 @@ class RestoreCommand extends Command
         }
 
         if (!$hasContent) {
-            throw new CommandError("Provided ZIP backup [{$zipPath}] does not have any expected restore-able content.");
+            throw new CommandError("Provided ZIP backup [{$zipPath}] does not have any expected restorable content.");
         }
 
         $output->writeln("<info>The checked elements will be restored into [{$appDir}].</info>");
@@ -180,7 +181,7 @@ class RestoreCommand extends Command
         rename($extractDir . DIRECTORY_SEPARATOR . $folderSubPath, $fullAppFolderPath);
     }
 
-    protected function deleteDirectoryAndContents(string $dir)
+    protected function deleteDirectoryAndContents(string $dir): void
     {
         $files = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
@@ -206,7 +207,7 @@ class RestoreCommand extends Command
         file_put_contents($dropSqlTempFile, $mysql->dropTablesSql());
         $mysql->importSqlFile($dropSqlTempFile);
 
-
+        // Import MySQL dump
         $mysql->importSqlFile($dbDump);
     }
 }
