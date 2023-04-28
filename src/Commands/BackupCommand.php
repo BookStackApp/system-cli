@@ -74,6 +74,7 @@ final class BackupCommand extends Command
             $this->addFolderToZipRecursive($zip, Paths::join($appDir, 'themes'), 'themes');
         }
 
+        $output->writeln("<info>Saving backup archive...</info>");
         // Close off our zip and move it to the required location
         $zip->close();
         // Delete our temporary DB dump file if exists. Must be done after zip close.
@@ -109,11 +110,11 @@ final class BackupCommand extends Command
      */
     protected function buildZipFilePath(string $suggestedOutPath, string $appDir): string
     {
-        $suggestedOutPath = Paths::resolve($suggestedOutPath);
-        $zipDir = Paths::join($appDir, 'backups');
+        $zipDir = Paths::join($appDir, 'storage', 'backups');
         $zipName = "bookstack-backup-" . date('Y-m-d-His') . '.zip';
 
         if ($suggestedOutPath) {
+            $suggestedOutPath = Paths::resolve($suggestedOutPath);
             if (is_dir($suggestedOutPath)) {
                 $zipDir = realpath($suggestedOutPath);
             } else if (is_dir(dirname($suggestedOutPath))) {
