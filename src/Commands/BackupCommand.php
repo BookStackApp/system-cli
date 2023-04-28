@@ -5,6 +5,7 @@ namespace Cli\Commands;
 use Cli\Services\AppLocator;
 use Cli\Services\EnvironmentLoader;
 use Cli\Services\MySqlRunner;
+use Cli\Services\Paths;
 use RecursiveDirectoryIterator;
 use SplFileInfo;
 use Symfony\Component\Console\Command\Command;
@@ -50,8 +51,8 @@ final class BackupCommand extends Command
         $zip->open($zipTempFile, ZipArchive::CREATE);
 
         // Add default files (.env config file and this CLI if existing)
-        $zip->addFile($appDir . DIRECTORY_SEPARATOR . '.env', '.env');
-        $cliPath = $appDir . DIRECTORY_SEPARATOR . 'bookstack-system-cli';
+        $zip->addFile(Paths::join($appDir, '.env'), '.env');
+        $cliPath = Paths::join($appDir, 'bookstack-system-cli');
         if (file_exists($cliPath)) {
             $zip->addFile($cliPath, 'bookstack-system-cli');
         }
@@ -70,7 +71,7 @@ final class BackupCommand extends Command
 
         if ($handleThemes) {
             $output->writeln("<info>Adding BookStack theme folders to backup archive...</info>");
-            $this->addFolderToZipRecursive($zip, implode(DIRECTORY_SEPARATOR, [$appDir, 'themes']), 'themes');
+            $this->addFolderToZipRecursive($zip, Paths::join($appDir, 'themes'), 'themes');
         }
 
         // Close off our zip and move it to the required location
@@ -103,11 +104,13 @@ final class BackupCommand extends Command
     /**
      * Build a full zip path from the given suggestion, which may be empty,
      * a path to a folder, or a path to a file in relative or absolute form.
+     * Targets the <app>/backups directory by default if existing, otherwise <app>.
      * @throws CommandError
      */
     protected function buildZipFilePath(string $suggestedOutPath, string $appDir): string
     {
-        $zipDir = getcwd() ?: $appDir;
+        $suggestedOutPath = Paths::resolve($suggestedOutPath);
+        $zipDir = Paths::join($appDir, 'backups');
         $zipName = "bookstack-backup-" . date('Y-m-d-His') . '.zip';
 
         if ($suggestedOutPath) {
@@ -119,12 +122,20 @@ final class BackupCommand extends Command
             } else {
                 throw new CommandError("Could not resolve provided [{$suggestedOutPath}] path to an existing folder.");
             }
+        } else {
+            if (!is_dir($zipDir)) {
+                $zipDir = $appDir;
+            }
         }
 
-        $fullPath = $zipDir . DIRECTORY_SEPARATOR . $zipName;
+        $fullPath = Paths::join($zipDir, $zipName);
 
         if (file_exists($fullPath)) {
             throw new CommandError("Target ZIP output location at [{$fullPath}] already exists.");
+        } else if (!is_dir($zipDir)) {
+            throw new CommandError("Target ZIP output directory [{$fullPath}] could not be found.");
+        } else if (!is_writable($zipDir)) {
+            throw new CommandError("Target ZIP output directory [{$fullPath}] is not writable.");
         }
 
         return $fullPath;
@@ -136,8 +147,8 @@ final class BackupCommand extends Command
      */
     protected function addUploadFoldersToZip(ZipArchive $zip, string $appDir): void
     {
-        $this->addFolderToZipRecursive($zip, implode(DIRECTORY_SEPARATOR, [$appDir, 'public', 'uploads']), 'public/uploads');
-        $this->addFolderToZipRecursive($zip, implode(DIRECTORY_SEPARATOR, [$appDir, 'storage', 'uploads']), 'storage/uploads');
+        $this->addFolderToZipRecursive($zip, Paths::join($appDir, 'public', 'uploads'), 'public/uploads');
+        $this->addFolderToZipRecursive($zip, Paths::join($appDir, 'storage', 'uploads'), 'storage/uploads');
     }
 
     /**

@@ -18,7 +18,7 @@ class RequirementsValidator
             $errors[] = "PHP >= 8.0.2 is required to install BookStack.";
         }
 
-        $requiredExtensions = ['bcmath', 'curl', 'gd', 'iconv', 'libxml', 'mbstring', 'mysqlnd', 'xml'];
+        $requiredExtensions = ['curl', 'gd', 'iconv', 'libxml', 'mbstring', 'mysqlnd', 'xml'];
         foreach ($requiredExtensions as $extension) {
             if (!extension_loaded($extension)) {
                 $errors[] = "The \"{$extension}\" PHP extension is required by not active.";

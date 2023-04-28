@@ -66,7 +66,7 @@ class RestoreCommand extends Command
         }
 
         $output->writeln("<info>The checked elements will be restored into [{$appDir}].</info>");
-        $output->writeln("<info>Existing content may be overwritten.</info>");
+        $output->writeln("<info>Existing content will be overwritten.</info>");
 
         if (!$interactions->confirm("Do you want to continue?")) {
             $output->writeln("<info>Stopping restore operation.</info>");

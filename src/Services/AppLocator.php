@@ -8,7 +8,7 @@ class AppLocator
 {
     public static function search(string $directory = ''): string
     {
-        $directoriesToSearch = $directory ? [$directory] : [
+        $directoriesToSearch = $directory ? [Paths::resolve($directory)] : [
             getcwd(),
             static::getCliDirectory(),
         ];

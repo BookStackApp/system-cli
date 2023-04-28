@@ -15,7 +15,7 @@ class ComposerLocator
     {
         return (new ProgramRunner('composer', '/usr/local/bin/composer'))
             ->withTimeout(300)
-            ->withIdleTimeout(15)
+            ->withIdleTimeout(60)
             ->withAdditionalPathLocation($this->appDir);
     }
 

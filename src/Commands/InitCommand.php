@@ -4,6 +4,7 @@ namespace Cli\Commands;
 
 use Cli\Services\ComposerLocator;
 use Cli\Services\EnvironmentLoader;
+use Cli\Services\Paths;
 use Cli\Services\ProgramRunner;
 use Cli\Services\RequirementsValidator;
 use Symfony\Component\Console\Command\Command;
@@ -49,7 +50,7 @@ class InitCommand extends Command
         $this->installComposerDependencies($composer, $installDir);
 
         $output->writeln("<info>Creating .env file from .env.example...</info>");
-        copy($installDir . DIRECTORY_SEPARATOR . '.env.example', $installDir . DIRECTORY_SEPARATOR . '.env');
+        copy(Paths::join($installDir, '.env.example'), Paths::join($installDir, '.env'));
         sleep(1);
 
         $output->writeln("<info>Generating app key...</info>");
@@ -73,7 +74,7 @@ class InitCommand extends Command
             ->withIdleTimeout(5)
             ->withEnvironment(EnvironmentLoader::load($installDir))
             ->runCapturingAllOutput([
-                $installDir . DIRECTORY_SEPARATOR . 'artisan',
+                Paths::join($installDir, 'artisan'),
                 'key:generate', '--force', '-n', '-q'
             ]);
 
@@ -150,22 +151,20 @@ class InitCommand extends Command
      */
     protected function getInstallDir(string $suggestedDir): string
     {
-        $dir = getcwd();
+        $dir = Paths::resolve($suggestedDir);
 
-        if ($suggestedDir) {
-            if (is_file($suggestedDir)) {
-                throw new CommandError("Was provided [{$suggestedDir}] as an install path but existing file provided.");
-            } else if (is_dir($suggestedDir)) {
-                $dir = realpath($suggestedDir);
-            } else if (is_dir(dirname($suggestedDir))) {
-                $created = mkdir($suggestedDir);
-                if (!$created) {
-                    throw new CommandError("Could not create directory [{$suggestedDir}] for install.");
-                }
-                $dir = realpath($suggestedDir);
-            } else {
-                throw new CommandError("Could not resolve provided [{$suggestedDir}] path to an existing folder.");
+        if (is_file($dir)) {
+            throw new CommandError("Was provided [{$dir}] as an install path but existing file provided.");
+        } else if (is_dir($dir) && realpath($dir)) {
+            $dir = realpath($dir);
+        } else if (is_dir(dirname($dir))) {
+            $created = mkdir($dir);
+            if (!$created) {
+                throw new CommandError("Could not create directory [{$dir}] for install.");
             }
+            $dir = realpath($dir);
+        } else {
+            throw new CommandError("Could not resolve provided [{$dir}] path to an existing folder.");
         }
 
         return $dir;
