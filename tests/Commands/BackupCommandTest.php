@@ -80,7 +80,8 @@ class BackupCommandTest extends TestCase
             '--no-database' => true,
             '--no-uploads' => true,
             '--no-themes' => true,
-            '--app-directory' => '/var/www/bookstack'
+            '--app-directory' => '/var/www/bookstack',
+            'backup-path' => './'
         ]);
         $result->assertSuccessfulExit();
 
