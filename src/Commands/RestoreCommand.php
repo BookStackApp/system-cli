@@ -37,11 +37,11 @@ class RestoreCommand extends Command
     {
         $interactions = new InteractiveConsole($this->getHelper('question'), $input, $output);
 
-        $output->writeln("<info>Warning!</info>");
-        $output->writeln("<info>- A restore operation will overwrite and remove files & content from an existing instance.</info>");
-        $output->writeln("<info>- Any existing tables within the configured database will be dropped.</info>");
-        $output->writeln("<info>- You should only restore into an instance of the same or newer BookStack version.</info>");
-        $output->writeln("<info>- This command won't handle, restore or address any server configuration.</info>");
+        $output->writeln("<warn>Warning!</warn>");
+        $output->writeln("<warn>- A restore operation will overwrite and remove files & content from an existing instance.</warn>");
+        $output->writeln("<warn>- Any existing tables within the configured database will be dropped.</warn>");
+        $output->writeln("<warn>- You should only restore into an instance of the same or newer BookStack version.</warn>");
+        $output->writeln("<warn>- This command won't handle, restore or address any server configuration.</warn>");
 
         $appDir = AppLocator::require($input->getOption('app-directory'));
         $output->writeln("<info>Checking system requirements...</info>");
@@ -66,7 +66,7 @@ class RestoreCommand extends Command
         }
 
         $output->writeln("<info>The checked elements will be restored into [{$appDir}].</info>");
-        $output->writeln("<info>Existing content will be overwritten.</info>");
+        $output->writeln("<warn>Existing content will be overwritten.</warn>");
 
         if (!$interactions->confirm("Do you want to continue?")) {
             $output->writeln("<info>Stopping restore operation.</info>");
@@ -119,7 +119,7 @@ class RestoreCommand extends Command
         $output->writeln("<info>Cleaning up extract directory...</info>");
         $this->deleteDirectoryAndContents($extractDir);
 
-        $output->writeln("<info>\nRestore operation complete!</info>");
+        $output->writeln("<success>\nRestore operation complete!</success>");
 
         return Command::SUCCESS;
     }

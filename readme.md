@@ -66,4 +66,23 @@ mysqldump may produce the following:
 > mysqldump: Couldn't execute 'FLUSH TABLES': Access denied; you need (at least one of) the RELOAD or FLUSH_TABLES privilege(s) for this operation (1227)
 
 This was due to 8.0.32 mysqldump, changing the required permissions, and this should be largely [fixed as per 8.0.33](https://bugs.mysql.com/bug.php?id=109685).
-Temporary workaround is to provide the database user RELOAD permissions: `GRANT RELOAD ON *.* TO 'bookstack'@'%';`
+Temporary workaround is to provide the database user RELOAD permissions. For example:
+
+```mysql
+GRANT RELOAD ON *.* TO 'bookstack'@'localhost';
+```
+#### mysql - Restore throws permission error
+
+MySQL during restore can throw the following:
+
+> ERROR 1227 (42000) at line 18 in file: '/root/bookstack/restore-temp-1682771620/db.sql': Access denied; you need (at least one of) the SUPER, SYSTEM_VARIABLES_ADMIN or SESSION_VARIABLES_ADMIN privilege(s) for this operation
+
+This is due to mysql adding replication data to the output.
+We could set `--set-gtid-purged=value` during dump but does not exist for mariadb.
+Alternatively, we could maybe filter these SET lines? But need to be targeted and efficient since files dump files may be large.
+
+#### mysql - Only TCP connections
+
+This assumes a database connection via a TCP connection is being used by BookStack.
+Socket/other type of connections could technically be used with BookStack but is not something we advise
+or document within our docs or env options listing, so we make this assumption for simplicity.

@@ -57,7 +57,7 @@ class InitCommand extends Command
         $this->generateAppKey($installDir);
 
         // Announce end
-        $output->writeln("<info>A BookStack install has been initialized at: {$installDir}\n</info>");
+        $output->writeln("<success>A BookStack install has been initialized at: {$installDir}\n</success>");
         $output->writeln("<info>You will still need to:</info>");
         $output->writeln("<info>- Update the .env file in the install with correct URL, database and email details.</info>");
         $output->writeln("<info>- Run 'php artisan migrate' to set-up the database.</info>");
@@ -107,8 +107,8 @@ class InitCommand extends Command
     protected function cloneBookStackViaGit(string $installDir): void
     {
         $git = (new ProgramRunner('git', '/usr/bin/git'))
-            ->withTimeout(240)
-            ->withIdleTimeout(15);
+            ->withTimeout(300)
+            ->withIdleTimeout(300);
 
         $errors = $git->runCapturingStdErr([
                 'clone', '-q',

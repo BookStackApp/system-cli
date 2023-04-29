@@ -48,7 +48,7 @@ final class BackupCommand extends Command
         $zipTempFile = tempnam(sys_get_temp_dir(), 'bsbackup');
         $dumpTempFile = '';
         $zip = new ZipArchive();
-        $zip->open($zipTempFile, ZipArchive::CREATE);
+        $zip->open($zipTempFile, ZipArchive::OVERWRITE);
 
         // Add default files (.env config file and this CLI if existing)
         $zip->addFile(Paths::join($appDir, '.env'), '.env');
@@ -59,7 +59,7 @@ final class BackupCommand extends Command
 
         if ($handleDatabase) {
             $output->writeln("<info>Dumping the database via mysqldump...</info>");
-            $dumpTempFile = $this->createDatabaseDump($appDir);
+            $dumpTempFile = $this->createDatabaseDump($appDir, $output);
             $output->writeln("<info>Adding database dump to backup archive...</info>");
             $zip->addFile($dumpTempFile, 'db.sql');
         }
@@ -85,7 +85,7 @@ final class BackupCommand extends Command
         rename($zipTempFile, $zipOutFile);
 
         // Announce end
-        $output->writeln("<info>Backup finished.</info>");
+        $output->writeln("<success>Backup finished.</success>");
         $output->writeln("Output ZIP saved to: {$zipOutFile}");
 
         return Command::SUCCESS;
@@ -172,7 +172,7 @@ final class BackupCommand extends Command
      * Create a database dump and return the path to the dumped SQL output.
      * @throws CommandError
      */
-    protected function createDatabaseDump(string $appDir): string
+    protected function createDatabaseDump(string $appDir, OutputInterface $output): string
     {
         $envOptions = EnvironmentLoader::loadMergedWithCurrentEnv($appDir);
         $mysql = MySqlRunner::fromEnvOptions($envOptions);
@@ -180,7 +180,10 @@ final class BackupCommand extends Command
 
         $dumpTempFile = tempnam(sys_get_temp_dir(), 'bsdbdump');
         try {
-            $mysql->runDumpToFile($dumpTempFile);
+            $warnings = $mysql->runDumpToFile($dumpTempFile);
+            if ($warnings) {
+                $output->writeln("<warn>Received warnings during mysqldump:\n{$warnings}</warn>");
+            }
         } catch (\Exception $exception) {
             unlink($dumpTempFile);
             throw new CommandError($exception->getMessage());

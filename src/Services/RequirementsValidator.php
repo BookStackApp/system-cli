@@ -6,6 +6,23 @@ use Exception;
 
 class RequirementsValidator
 {
+    protected static string $phpVersion = '8.0.2';
+    protected static array $extensions = [
+        'curl',
+        'dom',
+        'fileinfo',
+        'gd',
+        'iconv',
+        'libxml',
+        'mbstring',
+        'mysqlnd',
+        'pdo_mysql',
+        'session',
+        'simplexml',
+        'tokenizer',
+        'xml',
+    ];
+
     /**
      * Ensure the required PHP extensions are installed for this command.
      * @throws Exception
@@ -14,14 +31,13 @@ class RequirementsValidator
     {
         $errors = [];
 
-        if (version_compare(PHP_VERSION, '8.0.2') < 0) {
-            $errors[] = "PHP >= 8.0.2 is required to install BookStack.";
+        if (version_compare(PHP_VERSION, static::$phpVersion) < 0) {
+            $errors[] = sprintf("PHP >= %s is required to install BookStack.", static::$phpVersion);
         }
 
-        $requiredExtensions = ['curl', 'gd', 'iconv', 'libxml', 'mbstring', 'mysqlnd', 'xml'];
-        foreach ($requiredExtensions as $extension) {
+        foreach (static::$extensions as $extension) {
             if (!extension_loaded($extension)) {
-                $errors[] = "The \"{$extension}\" PHP extension is required by not active.";
+                $errors[] = "The \"{$extension}\" PHP extension is required but not active.";
             }
         }
 

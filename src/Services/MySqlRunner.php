@@ -38,6 +38,7 @@ class MySqlRunner
                 '-h', $this->host,
                 '-P', $this->port,
                 '-u', $this->user,
+                '--protocol=TCP',
                 $this->database,
                 '-e', "show tables;"
             ]);
@@ -55,6 +56,7 @@ class MySqlRunner
                 '-h', $this->host,
                 '-P', $this->port,
                 '-u', $this->user,
+                '--protocol=TCP',
                 $this->database,
                 '-e', "source {$sqlFilePath}"
             ]);
@@ -83,10 +85,11 @@ SET FOREIGN_KEY_CHECKS = 1;
 HEREDOC;
     }
 
-    public function runDumpToFile(string $filePath): void
+    public function runDumpToFile(string $filePath): string
     {
         $file = fopen($filePath, 'w');
         $errors = "";
+        $warnings = "";
         $hasOutput = false;
 
         try {
@@ -98,14 +101,22 @@ HEREDOC;
                     '-h', $this->host,
                     '-P', $this->port,
                     '-u', $this->user,
+                    '--protocol=TCP',
                     '--single-transaction',
                     '--no-tablespaces',
                     $this->database,
                 ], function ($data) use (&$file, &$hasOutput) {
                     fwrite($file, $data);
                     $hasOutput = true;
-                }, function ($error) use (&$errors) {
-                    $errors .= $error . "\n";
+                }, function ($error) use (&$errors, &$warnings) {
+                    $lines = explode("\n", $error);
+                    foreach ($lines as $line) {
+                        if (str_starts_with(strtolower($line), 'warning: ')) {
+                            $warnings .= $line;
+                        } else {
+                            $errors .= $line . "\n";
+                        }
+                    }
                 });
         } catch (\Exception $exception) {
             fclose($file);
@@ -124,6 +135,8 @@ HEREDOC;
         if ($errors) {
             throw new Exception("Failed mysqldump with errors:\n" . $errors);
         }
+
+        return $warnings;
     }
 
     public static function fromEnvOptions(array $env): static
