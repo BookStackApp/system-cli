@@ -18,6 +18,10 @@ try {
         unlink($pharFile . '.gz');
     }
 
+    if (is_dir(__DIR__ . '/vendor/phpunit')) {
+        throw new Exception("You should only compile when dev dependencies are NOT installed");
+    }
+
     // create phar
     $phar = new Phar($pharFile);
 
@@ -44,9 +48,9 @@ try {
     $phar->compressFiles(Phar::GZ);
 
     # Make the file executable
-    chmod(__DIR__ . "/{$pharFile}", 0770);
+    chmod(__DIR__ . "/{$pharFile}", 0775);
 
     echo "$pharFile successfully created" . PHP_EOL;
 } catch (Exception $e) {
-    echo $e->getMessage();
+    echo "ERROR: " . $e->getMessage() . "\n";
 }
