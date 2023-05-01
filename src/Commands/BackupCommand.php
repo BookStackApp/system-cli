@@ -21,7 +21,7 @@ final class BackupCommand extends Command
     {
         $this->setName('backup');
         $this->setDescription('Backup a BookStack installation to a single compressed ZIP file.');
-        $this->addArgument('backup-path', InputArgument::OPTIONAL, 'Outfile file or directory to store the resulting backup file.', '');
+        $this->addArgument('backup-path', InputArgument::OPTIONAL, 'Outfile file or directory to store the resulting backup ZIP file.', '');
         $this->addOption('no-database', null, InputOption::VALUE_NONE, "Skip adding a database dump to the backup");
         $this->addOption('no-uploads', null, InputOption::VALUE_NONE, "Skip adding uploaded files to the backup");
         $this->addOption('no-themes', null, InputOption::VALUE_NONE, "Skip adding the themes folder to the backup");

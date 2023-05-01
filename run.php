@@ -17,7 +17,7 @@ $app = require __DIR__ . '/src/app.php';
 $output =  new ConsoleOutput();
 $formatter = $output->getFormatter();
 $formatter->setStyle('warn', new OutputFormatterStyle('yellow'));
-$formatter->setStyle('info', new OutputFormatterStyle('blue'));
+$formatter->setStyle('info', new OutputFormatterStyle('cyan'));
 $formatter->setStyle('success', new OutputFormatterStyle('green'));
 $formatter->setStyle('error', new OutputFormatterStyle('red'));
 
