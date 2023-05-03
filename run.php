@@ -1,5 +1,6 @@
 #!/usr/bin/env php
 <?php
+declare(strict_types=1);
 
 if (php_sapi_name() !== 'cli') {
     exit;
@@ -23,6 +24,10 @@ $formatter->setStyle('error', new OutputFormatterStyle('red'));
 
 // Run the command and handle errors
 try {
+    $output->writeln("<warn>WARNING: This CLI is in early alpha testing.</warn>");
+    $output->writeln("<warn>There's a high chance of running into bugs, and the CLI API is subject to change.</warn>");
+    $output->writeln("");
+
     $app->run(null, $output);
 } catch (Exception $error) {
     $output = (new ConsoleOutput())->getErrorOutput();

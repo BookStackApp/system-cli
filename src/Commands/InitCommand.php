@@ -71,7 +71,7 @@ class InitCommand extends Command
     {
         $errors = (new ProgramRunner('php', '/usr/bin/php'))
             ->withTimeout(60)
-            ->withIdleTimeout(5)
+            ->withIdleTimeout(15)
             ->withEnvironment(EnvironmentLoader::load($installDir))
             ->runCapturingAllOutput([
                 Paths::join($installDir, 'artisan'),

@@ -120,6 +120,8 @@ class RestoreCommand extends Command
         $this->deleteDirectoryAndContents($extractDir);
 
         $output->writeln("<success>\nRestore operation complete!</success>");
+        $output->writeln("<info>You may need to fix file/folder permissions so that the webserver has</info>");
+        $output->writeln("<info>the required read/write access to the necessary directories & files.</info>");
 
         return Command::SUCCESS;
     }

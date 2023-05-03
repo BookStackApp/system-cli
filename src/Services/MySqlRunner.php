@@ -50,8 +50,8 @@ class MySqlRunner
     {
         $output = (new ProgramRunner('mysql', '/usr/bin/mysql'))
             ->withEnvironment(['MYSQL_PWD' => $this->password])
-            ->withTimeout(240)
-            ->withIdleTimeout(5)
+            ->withTimeout(300)
+            ->withIdleTimeout(300)
             ->runCapturingStdErr([
                 '-h', $this->host,
                 '-P', $this->port,
@@ -94,8 +94,8 @@ HEREDOC;
 
         try {
             (new ProgramRunner('mysqldump', '/usr/bin/mysqldump'))
-                ->withTimeout(240)
-                ->withIdleTimeout(15)
+                ->withTimeout(300)
+                ->withIdleTimeout(300)
                 ->withEnvironment(['MYSQL_PWD' => $this->password])
                 ->runWithoutOutputCallbacks([
                     '-h', $this->host,
