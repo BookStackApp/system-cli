@@ -5,6 +5,7 @@ namespace Cli\Commands;
 use Cli\Services\AppLocator;
 use Cli\Services\ArtisanRunner;
 use Cli\Services\ComposerLocator;
+use Cli\Services\Paths;
 use Cli\Services\ProgramRunner;
 use Cli\Services\RequirementsValidator;
 use Symfony\Component\Console\Command\Command;
@@ -29,6 +30,9 @@ class UpdateCommand extends Command
         $appDir = AppLocator::require($input->getOption('app-directory'));
         $output->writeln("<info>Checking system requirements...</info>");
         RequirementsValidator::validate();
+
+        $output->writeln("<info>Checking local Git repository is active...</info>");
+        $this->ensureGitRepoExists($appDir);
 
         $output->writeln("<info>Checking composer exists...</info>");
         $composerLocator = new ComposerLocator($appDir);
@@ -89,6 +93,18 @@ class UpdateCommand extends Command
 
         if ($errors) {
             throw new CommandError("Failed composer install with errors:\n" . $errors);
+        }
+    }
+
+    protected function ensureGitRepoExists(string $appDir): void
+    {
+        $expectedPath = Paths::join($appDir, '.git');
+        if (!is_dir($expectedPath)) {
+            $message = "Could not find a local git repository, it does not look like this instance is managed via common means.\n";
+            $message .= "If you are running BookStack via a docker container, you should update following the advised process for the docker container image in use.\n";
+            $message .= "This typically involves pulling and using an updated docker container image.";
+
+            throw new CommandError($message);
         }
     }
 }

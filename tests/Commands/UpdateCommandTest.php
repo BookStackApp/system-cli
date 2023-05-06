@@ -43,6 +43,20 @@ class UpdateCommandTest extends TestCase
         $result->assertStderrContains('Could not find a valid BookStack installation');
     }
 
+    public function test_command_rejects_on_no_git_repo_found()
+    {
+        exec('cp -r /var/www/bookstack /var/www/bookstack-update-git');
+        exec('rm -rf /var/www/bookstack-update-git/.git');
+        chdir('/var/www/bookstack-update-git');
+
+        $result = $this->runCommand('update');
+        $result->assertErrorExit();
+        $result->assertStderrContains("Could not find a local git repository");
+        $result->assertStderrContains("If you are running BookStack via a docker container");
+
+        exec('rm -rf /var/www/bookstack-update-git');
+    }
+
     public function test_command_can_be_provided_app_directory_option()
     {
         chdir('/home');
