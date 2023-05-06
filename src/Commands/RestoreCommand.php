@@ -13,8 +13,6 @@ use Cli\Services\Paths;
 use Cli\Services\ProgramRunner;
 use Cli\Services\RequirementsValidator;
 use Exception;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
