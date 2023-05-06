@@ -29,11 +29,8 @@ class RestoreCommandTest extends TestCase
 
         $result = $this->runCommand('restore', [
             'backup-zip' => $zipFile,
-        ], [
-            'yes', '1'
-        ]);
+        ], ['yes', '1']);
 
-        $result->dumpError();
         $result->assertSuccessfulExit();
         $result->assertStdoutContains('✔ .env Config File');
         $result->assertStdoutContains('✔ Themes Folder');
@@ -96,6 +93,44 @@ class RestoreCommandTest extends TestCase
         unlink('/var/www/bookstack/themes/hello.txt');
         $mysql = new mysqli('db', 'bookstack', 'bookstack', 'bookstack');
         $mysql->query("DROP TABLE zz_testing;");
+    }
+
+    public function test_restore_with_symlinked_content_folders()
+    {
+        $zipFile = $this->buildZip(function (\ZipArchive $zip) {
+            $zip->addFromString('.env', "APP_KEY=abc123\nAPP_URL=https://example.com");
+            $zip->addFromString('public/uploads/test.txt', 'hello-public-uploads');
+            $zip->addFromString('storage/uploads/test.txt', 'hello-storage-uploads');
+            $zip->addFromString('themes/test.txt', 'hello-themes');
+        });
+
+        exec('cp -r /var/www/bookstack /var/www/bookstack-symlink-restore');
+        chdir('/var/www/bookstack-symlink-restore');
+        mkdir('/symlinks');
+
+        $symlinkPaths = ['public/uploads', 'storage/uploads', '.env', 'themes'];
+        foreach ($symlinkPaths as $path) {
+            $targetFile = str_replace('/', '-', $path);
+            $code = 0;
+            $output = null;
+            exec("mv /var/www/bookstack-symlink-restore/{$path} /symlinks/{$targetFile}", $output, $code);
+            exec("ln -s /symlinks/{$targetFile} /var/www/bookstack-symlink-restore/{$path}", $output, $code);
+            if ($code !== 0) {
+                $this->fail("Error when setting up symlinks");
+            }
+        }
+
+        $result = $this->runCommand('restore', [
+            'backup-zip' => $zipFile,
+        ], ['yes', '1']);
+
+        $result->assertSuccessfulExit();
+
+        $this->assertStringEqualsFile('/var/www/bookstack-symlink-restore/public/uploads/test.txt', 'hello-public-uploads');
+        $this->assertStringEqualsFile('/var/www/bookstack-symlink-restore/storage/uploads/test.txt', 'hello-storage-uploads');
+        $this->assertStringEqualsFile('/var/www/bookstack-symlink-restore/themes/test.txt', 'hello-themes');
+
+        exec('rm -rf /var/www/bookstack-symlink-restore');
     }
 
     protected function buildZip(callable $builder): string

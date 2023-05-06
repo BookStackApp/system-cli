@@ -6,6 +6,21 @@ class Paths
 {
 
     /**
+     * Get the full real path, resolving symbolic links, to
+     * the existing file/directory of the given path.
+     * @throws \Exception
+     */
+    public static function real(string $path): string
+    {
+        $real = realpath($path);
+        if ($real === false) {
+            throw new \Exception("Path {$path} could not be resolved to a location on the filesystem");
+        }
+
+        return $real;
+    }
+
+    /**
      * Join together the given path components.
      * Does no resolving or cleaning.
      * Only the $base will remain absolute if so,

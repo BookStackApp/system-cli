@@ -8,6 +8,7 @@ use Cli\Services\BackupZip;
 use Cli\Services\EnvironmentLoader;
 use Cli\Services\InteractiveConsole;
 use Cli\Services\MySqlRunner;
+use Cli\Services\Paths;
 use Cli\Services\ProgramRunner;
 use Cli\Services\RequirementsValidator;
 use Exception;
@@ -74,7 +75,7 @@ class RestoreCommand extends Command
         }
 
         $output->writeln("<info>Extracting ZIP into temporary directory...</info>");
-        $extractDir = $appDir . DIRECTORY_SEPARATOR . 'restore-temp-' . time();
+        $extractDir = Paths::join($appDir, 'restore-temp-' . time());
         if (!mkdir($extractDir)) {
             throw new CommandError("Could not create temporary extraction directory at [{$extractDir}].");
         }
@@ -130,8 +131,8 @@ class RestoreCommand extends Command
     {
         $oldEnv = EnvironmentLoader::load($extractDir);
         $currentEnv = EnvironmentLoader::load($appDir);
-        $envContents = file_get_contents($extractDir . DIRECTORY_SEPARATOR . '.env');
-        $appEnvPath = $appDir . DIRECTORY_SEPARATOR . '.env';
+        $envContents = file_get_contents(Paths::join($extractDir, '.env'));
+        $appEnvPath = Paths::real(Paths::join($appDir, '.env'));
 
         $mysqlCurrent = MySqlRunner::fromEnvOptions($currentEnv);
         $mysqlOld = MySqlRunner::fromEnvOptions($oldEnv);
@@ -171,16 +172,16 @@ class RestoreCommand extends Command
             $returnData['new_url'] = $changedUrl;
         }
 
-        file_put_contents($appDir . DIRECTORY_SEPARATOR . '.env', $envContents);
+        file_put_contents($appEnvPath, $envContents);
 
         return $returnData;
     }
 
     protected function restoreFolder(string $folderSubPath, string $appDir, string $extractDir): void
     {
-        $fullAppFolderPath = $appDir . DIRECTORY_SEPARATOR . $folderSubPath;
+        $fullAppFolderPath = Paths::real(Paths::join($appDir, $folderSubPath));
         $this->deleteDirectoryAndContents($fullAppFolderPath);
-        rename($extractDir . DIRECTORY_SEPARATOR . $folderSubPath, $fullAppFolderPath);
+        rename(Paths::join($extractDir, $folderSubPath), $fullAppFolderPath);
     }
 
     protected function deleteDirectoryAndContents(string $dir): void
@@ -200,7 +201,7 @@ class RestoreCommand extends Command
 
     protected function restoreDatabase(string $appDir, string $extractDir): void
     {
-        $dbDump = $extractDir . DIRECTORY_SEPARATOR . 'db.sql';
+        $dbDump = Paths::join($extractDir, 'db.sql');
         $currentEnv = EnvironmentLoader::load($appDir);
         $mysql = MySqlRunner::fromEnvOptions($currentEnv);
 
