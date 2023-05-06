@@ -5,6 +5,7 @@ namespace Cli\Commands;
 use Cli\Services\AppLocator;
 use Cli\Services\ArtisanRunner;
 use Cli\Services\BackupZip;
+use Cli\Services\Directories;
 use Cli\Services\EnvironmentLoader;
 use Cli\Services\InteractiveConsole;
 use Cli\Services\MySqlRunner;
@@ -118,7 +119,7 @@ class RestoreCommand extends Command
         $artisan->run(['view:clear']);
 
         $output->writeln("<info>Cleaning up extract directory...</info>");
-        $this->deleteDirectoryAndContents($extractDir);
+        Directories::delete($extractDir);
 
         $output->writeln("<success>\nRestore operation complete!</success>");
         $output->writeln("<info>You may need to fix file/folder permissions so that the webserver has</info>");
@@ -180,23 +181,8 @@ class RestoreCommand extends Command
     protected function restoreFolder(string $folderSubPath, string $appDir, string $extractDir): void
     {
         $fullAppFolderPath = Paths::real(Paths::join($appDir, $folderSubPath));
-        $this->deleteDirectoryAndContents($fullAppFolderPath);
-        rename(Paths::join($extractDir, $folderSubPath), $fullAppFolderPath);
-    }
-
-    protected function deleteDirectoryAndContents(string $dir): void
-    {
-        $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        foreach ($files as $fileinfo) {
-            $path = $fileinfo->getRealPath();
-            $fileinfo->isDir() ? rmdir($path) : unlink($path);
-        }
-
-        rmdir($dir);
+        Directories::delete($fullAppFolderPath);
+        Directories::move(Paths::join($extractDir, $folderSubPath), $fullAppFolderPath);
     }
 
     protected function restoreDatabase(string $appDir, string $extractDir): void
