@@ -17,7 +17,7 @@ class RestoreCommandTest extends TestCase
         $this->assertEquals(0, mysqli_num_rows($result));
 
         $zipFile = $this->buildZip(function (\ZipArchive $zip) {
-            $zip->addFromString('.env', "APP_KEY=abc123\nAPP_URL=https://example.com");
+            $zip->addFromString('.env', "APP_KEY=abc123\nAPP_URL=https://restore.example.com");
             $zip->addFromString('public/uploads/test.txt', 'hello-public-uploads');
             $zip->addFromString('storage/uploads/test.txt', 'hello-storage-uploads');
             $zip->addFromString('themes/test.txt', 'hello-themes');
@@ -29,8 +29,9 @@ class RestoreCommandTest extends TestCase
 
         $result = $this->runCommand('restore', [
             'backup-zip' => $zipFile,
-        ], ['yes', '1']);
+        ], ['yes', '1']); // This restore uses the existing (Non-backup) APP_URL
 
+        $result->dumpError();
         $result->assertSuccessfulExit();
         $result->assertStdoutContains('✔ .env Config File');
         $result->assertStdoutContains('✔ Themes Folder');
@@ -38,6 +39,7 @@ class RestoreCommandTest extends TestCase
         $result->assertStdoutContains('✔ Private File Uploads');
         $result->assertStdoutContains('✔ Database Dump');
         $result->assertStdoutContains('Restore operation complete!');
+        $result->assertStdoutContains('App URL change made, updating database with URL change');
 
         $result = $mysql->query('SELECT * FROM zz_testing where names = \'barry\';');
         $this->assertEquals(1, mysqli_num_rows($result));
@@ -47,12 +49,38 @@ class RestoreCommandTest extends TestCase
         $this->assertStringEqualsFile('/var/www/bookstack-restore/public/uploads/test.txt', 'hello-public-uploads');
         $this->assertStringEqualsFile('/var/www/bookstack-restore/storage/uploads/test.txt', 'hello-storage-uploads');
         $this->assertStringEqualsFile('/var/www/bookstack-restore/themes/test.txt', 'hello-themes');
+
         $env = file_get_contents('/var/www/bookstack-restore/.env');
         $this->assertStringContainsString('APP_KEY=abc123', $env);
-        $this->assertStringContainsString('APP_URL=https://example.com', $env);
+        $this->assertStringNotContainsString('APP_URL=https://restore.example.com', $env);
+        $this->assertStringContainsString('APP_URL="https://example.com"', $env);
 
         $mysql->query("DROP TABLE zz_testing;");
         exec('rm -rf /var/www/bookstack-restore');
+    }
+
+    public function test_restore_using_backup_env_url()
+    {
+        $zipFile = $this->buildZip(function (\ZipArchive $zip) {
+            $zip->addFromString('.env', "APP_KEY=abc123\nAPP_URL=https://restore.example.com");
+        });
+
+        exec('cp -r /var/www/bookstack /var/www/bookstack-restore-backup-env');
+        chdir('/var/www/bookstack-restore-backup-env');
+
+        $result = $this->runCommand('restore', [
+            'backup-zip' => $zipFile,
+        ], ['yes', '0']); // This restore uses the old (Backup) APP_URL
+
+        $result->assertSuccessfulExit();
+        $result->assertStdoutContains('✔ .env Config File');
+        $result->assertStdoutContains('Restore operation complete!');
+
+        $env = file_get_contents('/var/www/bookstack-restore-backup-env/.env');
+        $this->assertStringContainsString('APP_KEY=abc123', $env);
+        $this->assertStringContainsString('APP_URL="https://restore.example.com"', $env);
+
+        exec('rm -rf /var/www/bookstack-restore-backup-env');
     }
 
     public function test_command_fails_on_zip_with_no_expected_contents()

@@ -104,9 +104,9 @@ class RestoreCommand extends Command
         }
 
         if ($envChanges && $envChanges['old_url'] !== $envChanges['new_url']) {
-            $output->writeln("<info>App URL change made, Updating database with URL change...</info>");
+            $output->writeln("<info>App URL change made, updating database with URL change...</info>");
             $artisan->run([
-                'bookstack:update-url',
+                'bookstack:update-url', '--force',
                 $envChanges['old_url'], $envChanges['new_url'],
             ]);
         }
@@ -165,9 +165,9 @@ class RestoreCommand extends Command
         ];
 
         if ($oldUrl !== $newUrl) {
-            $output->writeln("Found different APP_URL values:");
-            $changedUrl = $interactions->choice('Which would you like to use?', array_filter([$oldUrl, $newUrl]));
-            $envContents = preg_replace('/^APP_URL=.*?$/', 'APP_URL="' . $changedUrl . '"', $envContents);
+            $question = 'Found different APP_URL values, which would you like to use?';
+            $changedUrl = $interactions->choice($question, array_filter([$oldUrl, $newUrl]));
+            $envContents = preg_replace('/^APP_URL=.*?$/m', 'APP_URL="' . $changedUrl . '"', $envContents);
             $returnData['new_url'] = $changedUrl;
         }
 
