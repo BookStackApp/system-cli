@@ -20,7 +20,7 @@ class BackupCommandTest extends TestCase
     public function test_command_does_full_backup_of_cwd_instance_by_default()
     {
         chdir('/var/www/bookstack');
-        $this->assertCount(0, glob('bookstack-backup-*.zip'));
+        $this->assertCount(0, glob('storage/backups/bookstack-backup-*.zip'));
 
         file_put_contents('/var/www/bookstack/themes/test.txt', static::$uniqueUserEmail . '-themes');
         file_put_contents('/var/www/bookstack/public/uploads/test.txt', static::$uniqueUserEmail . '-public-uploads');
@@ -30,8 +30,8 @@ class BackupCommandTest extends TestCase
         $result->assertSuccessfulExit();
         $result->assertStdoutContains("Backup finished.");
 
-        $this->assertCount(1, glob('bookstack-backup-*.zip'));
-        $zipFile = glob('bookstack-backup-*.zip')[0];
+        $this->assertCount(1, glob('storage/backups/bookstack-backup-*.zip'));
+        $zipFile = glob('storage/backups/bookstack-backup-*.zip')[0];
 
         $zip = new \ZipArchive();
         $zip->open($zipFile);
@@ -58,7 +58,7 @@ class BackupCommandTest extends TestCase
         ]);
         $result->assertSuccessfulExit();
 
-        $zipFile = glob('bookstack-backup-*.zip')[0];
+        $zipFile = glob('storage/backups/bookstack-backup-*.zip')[0];
 
         $zip = new \ZipArchive();
         $zip->open($zipFile);
