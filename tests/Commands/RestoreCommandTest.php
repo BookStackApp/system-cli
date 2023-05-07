@@ -47,6 +47,9 @@ class RestoreCommandTest extends TestCase
         $this->assertStringEqualsFile('/var/www/bookstack-restore/public/uploads/test.txt', 'hello-public-uploads');
         $this->assertStringEqualsFile('/var/www/bookstack-restore/storage/uploads/test.txt', 'hello-storage-uploads');
         $this->assertStringEqualsFile('/var/www/bookstack-restore/themes/test.txt', 'hello-themes');
+        $env = file_get_contents('/var/www/bookstack-restore/.env');
+        $this->assertStringContainsString('APP_KEY=abc123', $env);
+        $this->assertStringContainsString('APP_URL=https://example.com', $env);
 
         $mysql->query("DROP TABLE zz_testing;");
         exec('rm -rf /var/www/bookstack-restore');

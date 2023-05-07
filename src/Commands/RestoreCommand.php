@@ -146,7 +146,7 @@ class RestoreCommand extends Command
             $currentEnvDbLines = array_values(array_filter(explode("\n", $currentEnvContents), function (string $line) {
                 return str_starts_with($line, 'DB_');
             }));
-            $oldEnvLines = array_values(array_filter(explode("\n", $currentEnvContents), function (string $line) {
+            $oldEnvLines = array_values(array_filter(explode("\n", $envContents), function (string $line) {
                 return !str_starts_with($line, 'DB_');
             }));
             $envContents = implode("\n", [
