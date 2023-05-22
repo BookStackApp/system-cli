@@ -119,4 +119,42 @@ class BackupCommandTest extends TestCase
         unlink($zipFile);
     }
 
+    public function test_command_resolves_nested_symlinks()
+    {
+        $symDirs = ['storage/uploads/files', 'storage/uploads/images'];
+        exec('cp -r /var/www/bookstack /var/www/bookstack-symlink-backup');
+        mkdir('/symlinks');
+        foreach ($symDirs as $dir) {
+            $targetFile = str_replace('/', '-', $dir);
+            $code = 0;
+            $output = null;
+            exec("mkdir -p /var/www/bookstack-symlink-backup/{$dir}", $output, $code);
+            exec("mv /var/www/bookstack-symlink-backup/{$dir} /symlinks/{$targetFile}", $output, $code);
+            exec("ln -s /symlinks/{$targetFile} /var/www/bookstack-symlink-backup/{$dir}", $output, $code);
+            file_put_contents("/symlinks/{$targetFile}/test.txt", "Hello from $dir");
+            if ($code !== 0) {
+                $this->fail("Error when setting up symlinks");
+            }
+        }
+
+        chdir('/var/www/bookstack-symlink-backup');
+        $this->assertCount(0, glob('storage/backups/bookstack-backup-*.zip'));
+        $result = $this->runCommand('backup');
+        $result->assertSuccessfulExit();
+        $this->assertCount(1, glob('storage/backups/bookstack-backup-*.zip'));
+        $zipFile = glob('storage/backups/bookstack-backup-*.zip')[0];
+
+        $zip = new \ZipArchive();
+        $zip->open($zipFile);
+        foreach ($symDirs as $dir) {
+            $fileData = $zip->getFromName("{$dir}/test.txt");
+            $this->assertNotFalse($fileData);
+            $this->assertStringContainsString("Hello from {$dir}", $fileData);
+        }
+        $zip->close();
+
+        exec('rm -rf /symlinks');
+        exec('rm -rf /var/www/bookstack-symlink-backup');
+    }
+
 }

@@ -162,6 +162,7 @@ class RestoreCommandTest extends TestCase
         $this->assertStringEqualsFile('/var/www/bookstack-symlink-restore/themes/test.txt', 'hello-themes');
 
         exec('rm -rf /var/www/bookstack-symlink-restore');
+        exec('rm -rf /symlinks');
     }
 
     protected function buildZip(callable $builder): string

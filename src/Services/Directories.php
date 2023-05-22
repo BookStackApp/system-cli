@@ -1,6 +1,7 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Cli\Services;
+use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -19,7 +20,7 @@ class Directories
 
         /** @var RecursiveDirectoryIterator $files */
         $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($src, RecursiveDirectoryIterator::SKIP_DOTS),
+            new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS),
             RecursiveIteratorIterator::SELF_FIRST
         );
 
@@ -43,7 +44,7 @@ class Directories
     public static function delete(string $dir): void
     {
         $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
+            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS),
             RecursiveIteratorIterator::CHILD_FIRST
         );
 

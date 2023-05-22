@@ -6,6 +6,7 @@ use Cli\Services\AppLocator;
 use Cli\Services\EnvironmentLoader;
 use Cli\Services\MySqlRunner;
 use Cli\Services\Paths;
+use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use SplFileInfo;
 use Symfony\Component\Console\Command\Command;
@@ -158,12 +159,15 @@ final class BackupCommand extends Command
      */
     protected function addFolderToZipRecursive(ZipArchive $zip, string $dirPath, string $targetZipPath): void
     {
-        $dirIter = new RecursiveDirectoryIterator($dirPath);
+        $dirIter = new RecursiveDirectoryIterator(
+            $dirPath,
+            FilesystemIterator::KEY_AS_PATHNAME | FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::FOLLOW_SYMLINKS
+        );
         $fileIter = new \RecursiveIteratorIterator($dirIter);
         /** @var SplFileInfo $file */
         foreach ($fileIter as $file) {
             if (!$file->isDir()) {
-                $zip->addFile($file->getPathname(), $targetZipPath . '/' . $fileIter->getSubPathname());
+                $zip->addFile($file->getRealPath(), $targetZipPath . '/' . $fileIter->getSubPathname());
             }
         }
     }

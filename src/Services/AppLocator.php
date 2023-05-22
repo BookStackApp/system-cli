@@ -13,8 +13,6 @@ class AppLocator
             static::getCliDirectory(),
         ];
 
-        var_dump($directoriesToSearch);
-
         foreach ($directoriesToSearch as $directory) {
             if ($directory && static::isProbablyAppDirectory($directory)) {
                 return $directory;
