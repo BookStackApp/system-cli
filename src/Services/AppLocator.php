@@ -13,6 +13,8 @@ class AppLocator
             static::getCliDirectory(),
         ];
 
+        var_dump($directoriesToSearch);
+
         foreach ($directoriesToSearch as $directory) {
             if ($directory && static::isProbablyAppDirectory($directory)) {
                 return $directory;
@@ -36,8 +38,9 @@ class AppLocator
     protected static function getCliDirectory(): string
     {
         $scriptDir = dirname(__DIR__);
+
         if (str_starts_with($scriptDir, 'phar://')) {
-            $scriptDir = dirname(Phar::running(false));
+            return dirname(Phar::running(false));
         }
 
         return dirname($scriptDir);
